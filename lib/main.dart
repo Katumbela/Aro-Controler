@@ -1,10 +1,49 @@
 import 'dart:async';
+import 'package:arobot_controller/secondPage.dart';
+import 'package:arobot_controller/sound_provide.dart';
+import 'package:arobot_controller/tela2.dart';
+import 'package:arobot_controller/tela3.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:lottie/lottie.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'controles.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Solicitar permissões necessárias
+  await _requestPermissions();
+
+  runApp(
+    MaterialApp(
+      title: 'ARO CONTROLLER AROTEC',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: ChangeNotifierProvider(
+        create: (context) => SoundProvider(),
+        child: MyApp(),
+      ),
+    ),
+  );
+}
+
+Future<void> _requestPermissions() async {
+  var status = await Permission.location.status;
+  if (status.isDenied) {
+    await Permission.location.request();
+  }
+
+  status = await Permission.bluetooth.status;
+  if (status.isDenied) {
+    await Permission.bluetooth.request();
+  }
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -17,7 +56,7 @@ class _MyAppState extends State<MyApp> {
   StreamController<String> _dataStreamController = StreamController<String>();
   List<BluetoothDevice> _devices = [];
   late BluetoothConnection connection;
-  String adr = "98:D3:71:F5:BA:6D"; // meu endereço MAC do dispositivo Bluetooth
+  String adr = "00:21:06:BE:62:CD"; // meu endereço MAC do dispositivo Bluetooth
   bool isConnected = false;
 
   @override
@@ -86,63 +125,125 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Controle de LED Bluetooth Único"),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return Scaffold(
+          backgroundColor: Color(0xFF2A2656),
+          body: ListView(
             children: [
-              const Text("Endereço MAC: 98:D3:71:F5:BA:6D\nAROBOT TEST-01"),
-              ElevatedButton(
-                child: Text(isConnected ? "Desconectar" : "Conectar"),
-                onPressed: () {
-                  toggleConnection();
-                },
+              Container(
+                margin: EdgeInsets.only(top: 120),
+                width:
+                    250.0, // Ajuste conforme necessário para o tamanho desejado
+                height:
+                    250.0, // Ajuste conforme necessário para o tamanho desejado
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF07234F), // Substitua pela cor hexa desejada
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                // Adicione qualquer conteúdo desejado aqui, como um ícone ou texto
+                child: Lottie.asset('assets/boticon.json',
+                    width: MediaQuery.of(context).size.width * 0.4),
               ),
               SizedBox(
-                height: 30.0,
+                height: 20,
               ),
-              Builder(
-                builder: (BuildContext context) {
-                  if (isConnected) {
-                    return Text("Conectado ao MAC $adr");
-                  } else {
-                    return Text("Desconectado");
-                  }
-                },
+              Container(
+                padding: EdgeInsets.only(
+                    left: MediaQuery.of(context).size.width * .2),
+                child: Row(
+                  children: [
+                    Text(
+                      "ARO _",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF216FE4),
+                          fontSize: 34),
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(top: 25, left: 10),
+                      child: Lottie.asset(
+                        'assets/3pontos.json',
+                      ),
+                    )
+                  ],
+                ),
               ),
               SizedBox(
-                height: 30.0,
+                height: 1,
               ),
-
-             isConnected ? Text("") : SizedBox(
-                height: 30.0,
-                child: CircularProgressIndicator(dfgg),
+              Container(
+                margin: EdgeInsets.only(
+                    left: MediaQuery.of(context).size.width * .2),
+                child: Text(
+                  "CONTROLLER",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF216FE4),
+                      fontSize: 34),
+                ),
               ),
-              Center(
-                child: isConnected
-                    ? ElevatedButton(
-                        child: Text("Controles"),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ControlesPage(
-                                enviarComando: sendData,
+              SizedBox(
+                height: 40,
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * .6,
+                margin: EdgeInsets.symmetric(vertical: 20.0),
+                child: Builder(
+                  builder: (BuildContext context) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.rightToLeft,
+                            duration: const Duration(milliseconds: 200),
+                            child: Tela3(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        color: Colors.blue[800],
+                        padding: EdgeInsets.all(20.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Lottie.asset('assets/slideright.json', height: 50),
+                            Container(
+                              child: Text(
+                                "Começar",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 28,
+                                ),
                               ),
                             ),
-                          );
-                        },
-                      )
-                    : Text(""),
+                            Lottie.asset('assets/slideright.json', height: 50),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Container(
+                child: Image.asset(
+                  'assets/logo.png',
+                  height: 20,
+                ),
               )
             ],
           ),
-        ),
-      ),
     );
   }
 }
